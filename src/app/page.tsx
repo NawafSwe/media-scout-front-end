@@ -1,40 +1,15 @@
-"use client";
+import { useEffect, useState } from "react";
+import { fetchMedia } from "./http_client";
+import { MediaItem } from "./model";
 
-import { useState, useEffect } from "react";
-
-interface MediaItem {
-  wrapperType: string;
-  kind: string;
-  artistId: number;
-  collectionId: number;
-  trackId: number;
-  artistName: string;
-  collectionName: string;
-  trackName: string;
-  artistViewUrl: string;
-  collectionViewUrl: string;
-  trackViewUrl: string;
-  artworkUrl100: string;
-  releaseDate: string;
-  country: string;
-  primaryGenreName: string;
-}
-
-interface ApiResponse {
-  id: number;
-  search_term: string;
-  result_count: number;
-  media: MediaItem[];
-}
-
-export default function Home() {
+const MediaPage = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [debouncedTerm, setDebouncedTerm] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState(""); // User input
+  const [debouncedTerm, setDebouncedTerm] = useState(""); // Debounced search term
 
-  // Debounce Effect - Wait 500ms before setting debouncedTerm
+  // Debounce effect: update debouncedTerm after 500ms when searchTerm changes
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedTerm(searchTerm);
@@ -43,35 +18,28 @@ export default function Home() {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Fetch API data when debouncedTerm changes
+  // Fetch media when debouncedTerm changes
   useEffect(() => {
     if (!debouncedTerm) {
       setMedia([]);
       return;
     }
 
-    const fetchMedia = async () => {
+    const loadMedia = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const response = await fetch(
-          `http://localhost:3001/api/v1/media/search?term=${debouncedTerm}`
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch media");
-
-        const data: ApiResponse = await response.json();
-        setMedia(data.media || []);
+        const data = await fetchMedia(debouncedTerm);
+        setMedia(data);
       } catch (err) {
         setError("Error fetching media");
-        console.error("Fetch Error:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMedia();
+    loadMedia();
   }, [debouncedTerm]);
 
   return (
@@ -126,4 +94,6 @@ export default function Home() {
       </div>
     </div>
   );
-}
+};
+
+export default MediaPage;

@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { fetchMedia } from "./http_client";
 import { MediaItem } from "./model";
